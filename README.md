@@ -69,3 +69,7 @@ Every write is atomic, frontmatter is never touched by body edits, and a hash mi
 ## Versioning
 
 The plugin version tracks the Jotura CLI release it was published from. Skill files carry a `jotura:begin v=` marker with the same number.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
