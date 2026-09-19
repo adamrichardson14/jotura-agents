@@ -1,5 +1,6 @@
 {
   "name": "jotura-agents",
+  "description": "Skills that let Claude Code, Codex, Gemini CLI, Copilot and OpenCode work safely in a Jotura markdown vault",
   "owner": {
     "name": "Adam Richardson",
     "url": "https://jotura.io"
