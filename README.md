@@ -1,6 +1,6 @@
 # Jotura agents
 
-Skills, plugin marketplace and agent instructions for [Jotura](https://jotura.io), the free, local-first markdown notes app your AI agents can work in too.
+Skills, plugin marketplace and agent instructions for [Jotura](https://jotura.io): fast, private markdown notes built for how work happens now, in files you own, shared with the people you choose and kept up to date by the AI tools you already use.
 
 A Jotura vault is an ordinary folder of `.md` files on your disk. The `jotura` command line gives any file-capable agent (Claude Code, Codex, Gemini CLI, GitHub Copilot, OpenCode) safe, precise operations on that folder: hash-checked edits, strict unique-match replaces, full-text and semantic search, daily notes, and a memory of decisions, facts and follow-ups that survives the session. This repository holds the skills that teach an agent how to use it.
 
