@@ -1,0 +1,12 @@
+{
+  "name": "jotura",
+  "version": "0.9.9",
+  "description": "Skills for editing a Jotura markdown vault with the jotura CLI. Requires the jotura binary.",
+  "author": {
+    "name": "Adam Richardson",
+    "url": "https://jotura.io"
+  },
+  "homepage": "https://jotura.io/agents",
+  "repository": "https://github.com/adamrichardson14/jotura-agents",
+  "keywords": ["jotura", "markdown", "notes", "pkm", "vault", "cli", "agent-memory"]
+}

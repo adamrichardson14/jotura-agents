@@ -1,0 +1,15 @@
+{
+  "name": "jotura-agents",
+  "owner": {
+    "name": "Adam Richardson",
+    "url": "https://jotura.io"
+  },
+  "plugins": [
+    {
+      "name": "jotura",
+      "source": "./jotura",
+      "description": "Skills for editing a Jotura markdown vault with the jotura CLI",
+      "version": "0.9.9"
+    }
+  ]
+}
