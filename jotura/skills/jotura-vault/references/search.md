@@ -59,6 +59,22 @@ in the desktop app (Settings → Semantic search → Enable) or fix the key.
 Don't retry semantic modes until they have. A network or rate-limit failure
 from OpenAI is exit 1 with a redacted message; retrying later is reasonable.
 
+## The keyword index cache
+
+Keyword search keeps a persistent index at `<vault>/.jotura/cli-search/`,
+separate from the desktop's own index, with a manifest recording each file's
+path, mtime and size. A search stat-walks the vault, re-indexes only what
+changed since the last run, drops what was deleted, and queries. Repeated
+searches are therefore cheap, and results always reflect the files on disk,
+including edits made by the desktop app or by hand between two calls. Only
+text files within the 25 MiB indexing guard have their bodies indexed;
+documents and oversized files still match by filename. Only one process uses
+the cache at a time; a search that loses the race waits briefly and then
+builds a throwaway index for itself, so parallel searches are always correct
+and never cost the next one a rebuild. Add `--no-cache` to
+build a throwaway index for a single search (keyword mode only) when you
+suspect the cache is at fault. `--in` scoping always uses a throwaway index.
+
 ## Exact-match search with `grep`
 
 `jotura grep <pattern>` runs a regex over every text file body (markdown
