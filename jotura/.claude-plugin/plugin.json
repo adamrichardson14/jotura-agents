@@ -1,6 +1,6 @@
 {
   "name": "jotura",
-  "version": "0.9.11",
+  "version": "0.9.12",
   "description": "Skills for editing a Jotura markdown vault with the jotura CLI. Requires the jotura binary.",
   "author": {
     "name": "Adam Richardson",
