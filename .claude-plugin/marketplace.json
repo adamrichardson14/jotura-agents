@@ -10,7 +10,7 @@
       "name": "jotura",
       "source": "./jotura",
       "description": "Skills for editing a Jotura markdown vault with the jotura CLI",
-      "version": "0.9.12"
+      "version": "0.10.0"
     }
   ]
 }
