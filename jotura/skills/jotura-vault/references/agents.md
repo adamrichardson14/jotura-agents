@@ -24,6 +24,13 @@ file is skipped as a conflict (exit 16, `AgentConflict`) — resolve it with
 `jotura agents sync --prefer vault|system`. Nothing on the system side is
 deleted without `--prune`.
 
+Custom entries declared in the frontmatter of `Agents/Agents.md` sync on a
+device only after `jotura agents approve <name>` has run there. Until then,
+and again whenever the entry's target or kind changes, `agents status` reports
+it as `needs-approval` and sync leaves both sides alone. Approving is the
+user's call: ask before running it, and name the system path it will write.
+Files inside a share mount are reported as `skipped-shared` and never sync.
+
 ## Installing the skills in other agents
 
 Two skills ship together: jotura-vault (CLI mechanics) and jotura-notes
