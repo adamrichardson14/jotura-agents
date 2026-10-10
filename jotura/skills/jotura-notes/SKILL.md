@@ -5,7 +5,7 @@ description: Filing and capture rules for the user's Jotura vault — which fold
 
 # Jotura notes — filing & capture
 
-This skill ships general principles and no knowledge of this user's vault. That knowledge lives **in the vault itself**: the Agent Conventions note, shared by every AI agent the user runs, synced across their devices, and never touched by installers. `jotura conventions` prints it, creating a seeded template on first use.
+This skill ships general principles and no knowledge of this user's vault. That knowledge lives **in the vault itself**: the Agent Conventions note, shared by every AI agent the user runs, synced across their devices, and never overwritten by a skill update. `jotura conventions` prints it, creating a seeded template on first use.
 
 ## The improvement loop — every session
 
@@ -92,7 +92,7 @@ escaping is needed.
 | `- [ ] text @due(2026-09-30)` | a task in the Tasks pane, dated by `@due`, or by the daily note's date when written in a daily note; `- [x]` marks it done |
 | `- [/]`, `- [-]`, `- [>]`, `- [?]` | in-progress, cancelled, forwarded and question markers, rendered with their own checkbox styling. Only `[ ]`, `[x]` and `[X]` count as tasks in the Tasks pane, so date-tracked work needs one of those three |
 | `==highlight==` | a highlight mark |
-| `$\pi r^2$`, `$$ ... $$` | inline and block math, shown as monospace text; nothing is typeset |
+| `$\pi r^2$`, `$$ ... $$` | inline and block math, typeset on the desktop and shown as written on the phone |
 | `%% comment %%` | a muted aside, kept in the file and dropped from HTML export; `%%` alone on its own lines makes a whole block a comment |
 | `[^1]` and `[^1]: text` | a footnote reference and its definition, shown as written with light styling on the marker. Labels may be words, with no spaces or brackets |
 | `^block-id` at the end of a line | a block id, shown as written; `[[Note#^block-id]]` links to the note holding it |
@@ -149,10 +149,6 @@ reports only the frontmatter block it edits.
 
 Every note connects. End notes with a `## Links` section of `[[wikilinks]]` to the project, people, and topic notes they relate to; an unlinked note is a dead end. Wikilinks resolve by filename (case-insensitive, shortest path) and then by frontmatter `aliases`: moves are safe, renames break links unless the old name is kept as an alias (check `jotura backlinks` before renaming).
 
-## Agent config lives in `Agents/`
-
-The vault's `Agents/` folder is the canonical home for agent configuration — global instruction files, skills, subagent definitions. Edit the vault copy, then run `jotura agents sync` to write it out to the system locations; never hand-edit both sides in one session. A file changed on both sides is skipped as a conflict (exit 16) — resolve it with `jotura agents sync --prefer vault|system`.
-
 ## Where learned knowledge lives
 
-Not here. This file is a shipped artifact that upgrades with the CLI — anything written into it can be replaced. The durable, cross-agent home for everything learned about this vault is the Agent Conventions note (`jotura conventions`): folder layout, project structure, naming conventions, what is work vs personal, and the log of the user's filing corrections.
+Not here. This file is a published skill that gets replaced when the user updates it, so anything written into it can be lost. The durable, cross-agent home for everything learned about this vault is the Agent Conventions note (`jotura conventions`): folder layout, project structure, naming conventions, what is work vs personal, and the log of the user's filing corrections.

@@ -13,7 +13,7 @@ A Jotura vault is an ordinary folder of `.md` files on your disk. The `jotura` c
 | `jotura/.claude-plugin/plugin.json` | Plugin manifest for Claude Code |
 | `.claude-plugin/marketplace.json` | Marketplace manifest so the plugin can be added by repository name |
 
-Both skills are the same files the Jotura desktop app and CLI install, published here so they can be read, reviewed and installed without the app.
+This repository is the only home of the Jotura skills. The Jotura app and CLI do not install, update or manage agent files, so you install the skills here the way you install any other skill, and you are free to adapt them or write your own.
 
 ## Install
 
@@ -36,16 +36,21 @@ irm https://jotura.io/install.ps1 | iex
 
 ### Codex, Gemini CLI, GitHub Copilot, OpenCode
 
-The CLI writes the skills into each agent's own skill folder:
+Copy the two skill folders from `jotura/skills/` into the agent's own skill folder, for example `~/.codex/skills/` for Codex or `~/.config/opencode/skills/` for OpenCode. An agent without skill folders, such as Gemini CLI or GitHub Copilot, can read the `SKILL.md` text from its global instructions file.
 
-```sh
-jotura skill install codex
-jotura skill install gemini
-jotura skill install copilot
-jotura skill install opencode
+### Load context at session start (optional)
+
+To hand Claude Code your conventions and open follow-ups when a session starts, add a hook to `~/.claude/settings.json` yourself:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [{ "type": "command", "command": "jotura context" }] }
+    ]
+  }
+}
 ```
-
-`jotura skill install claude` does the same for Claude Code without the marketplace, and `--force` rewrites an existing copy.
 
 ## How an agent works with a vault
 
@@ -63,12 +68,12 @@ Every write is atomic, frontmatter is never touched by body edits, and a hash mi
 
 - [Agents on jotura.io](https://jotura.io/agents): what the shared workspace looks like from the human side
 - [CLI documentation](https://jotura.io/docs/cli/install): every command and flag
-- [Guides](https://jotura.io/guides): persistent memory for Claude Code, Codex, Gemini and Copilot, syncing agent config between machines, and more
+- [Guides](https://jotura.io/guides): persistent memory for Claude Code, Codex, Gemini and Copilot, and more
 - [Download](https://jotura.io/download): the app is free on macOS, Windows, Linux and Android
 
 ## Versioning
 
-The plugin version tracks the Jotura CLI release it was published from. Skill files carry a `jotura:begin v=` marker with the same number.
+The plugin carries its own version, raised in both manifests whenever a skill changes. Claude Code picks up a new version when you run `/plugin marketplace update jotura-agents`.
 
 ## License
 

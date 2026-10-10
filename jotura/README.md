@@ -20,4 +20,4 @@ Install the plugin from Claude Code:
 /plugin install jotura@jotura-agents
 ```
 
-Full setup, including semantic search and syncing agent config between machines: https://jotura.io/guides/give-your-ai-agents-the-maximum-boost-with-jotura/
+Full setup, including semantic search: https://jotura.io/guides/give-your-ai-agents-the-maximum-boost-with-jotura/

@@ -1,6 +1,6 @@
 ---
 name: jotura-vault
-description: Complete command and flag reference for the `jotura` CLI, which reads, searches, and edits the user's Jotura markdown vault. Invoke this BEFORE running any `jotura` command — including the first one, and including commands you believe you already know. The flag grammar is not guessable: body-supplying ops such as `--append` and `--insert-after` take `--content`, while `--replace` takes `--with`, and the wrong pairing is rejected rather than applied. Also covers hash-CAS conditional writes, unique-match replaces, semantic search modes, documents, trash, templates, daily notes, agent config sync, and every exit code. Triggers on "Jotura", "my vault", "my notes", "my journal", "daily note"; on any question whose answer lives in personal notes; and on any request to create, read, search, rename, delete, tag, or modify a note. Do NOT use this skill for files outside the user's vault.
+description: Complete command and flag reference for the `jotura` CLI, which reads, searches, and edits the user's Jotura markdown vault. Invoke this BEFORE running any `jotura` command — including the first one, and including commands you believe you already know. The flag grammar is not guessable: body-supplying ops such as `--append` and `--insert-after` take `--content`, while `--replace` takes `--with`, and the wrong pairing is rejected rather than applied. Also covers hash-CAS conditional writes, unique-match replaces, semantic search modes, documents, trash, templates, daily notes, agent memory, and every exit code. Triggers on "Jotura", "my vault", "my notes", "my journal", "daily note"; on any question whose answer lives in personal notes; and on any request to create, read, search, rename, delete, tag, or modify a note. Do NOT use this skill for files outside the user's vault.
 ---
 
 # Jotura vault
@@ -11,8 +11,7 @@ The user often runs the Jotura desktop app concurrently. The CLI and desktop coo
 
 You MAY read vault files directly (`cat`, `grep`, editors), but prefer the CLI for every mutation: it enforces unique-match replaces, preserves frontmatter, writes atomically, and honors `--if-hash` concurrency checks.
 
-Two skills ship together: this one (CLI mechanics) and **jotura-notes** (filing and capture — where notes go, what belongs in them, when to write proactively). Consult jotura-notes before deciding where any content goes. Everything agents learn about a specific vault lives in that vault's Agent Conventions note (`jotura conventions`), not in either skill. `jotura skill install` writes both SKILL.md files as a managed block, so your own content around the markers survives every upgrade; the files under `references/` are plain files that get replaced wholesale on the next version bump or `--force`, so never edit them by hand.
-
+Two skills ship together: this one (CLI mechanics) and **jotura-notes** (filing and capture — where notes go, what belongs in them, when to write proactively). Consult jotura-notes before deciding where any content goes. Everything agents learn about a specific vault lives in that vault's Agent Conventions note (`jotura conventions`), not in either skill.
 ## Before you do anything
 
 Run `jotura status --json` first (or `jotura doctor --json` for a deeper health check). It returns one of:
@@ -87,7 +86,7 @@ jotura grep "TODO" --json                          # regex over bodies
 jotura backlinks projects/acme.md --json           # notes linking TO this one
 ```
 
-`jotura search` builds an in-memory index over the vault on every call (it uses Tantivy internally, but nothing is persisted between invocations). `quick-open` matches filenames and frontmatter `aliases`; a hit found through an alias carries an `alias` field in `--json` output. `jotura ls --json` lists every note, `--folder P` one folder. Read `references/search.md` before using semantic or smart mode, the `grep` flags, `links`, or document search.
+`jotura search` keeps a keyword index in `.jotura/cli-search/` when the vault already has a `.jotura/` folder and updates only the notes that changed; otherwise, or with `--in` or `--no-cache`, it builds a throwaway in-memory index for that call. `quick-open` matches filenames and frontmatter `aliases`; a hit found through an alias carries an `alias` field in `--json` output. `jotura ls --json` lists every note, `--folder P` one folder. Read `references/search.md` before using semantic or smart mode, the `grep` flags, `links`, or document search.
 
 ## Editing: string-based (preferred)
 
@@ -274,14 +273,12 @@ memory recall Q [--mode keyword|semantic|smart] [--kind K --project P
 memory list [--kind K --status S --stale]  → browse memory
 memory supersede OLD --by NEW / memory resolve P → close the loop
 memory doctor [--fix]  → stale actives, stalled follow-ups, broken edges
-hook install claude → SessionStart hook injecting `jotura context`
 backlinks P [--limit N]                        → notes linking TO P
 links P [--limit N]                            → links inside P (outgoing)
 grep PAT [-i -x -w -c -l -L] [--include G --exclude G] [--max-count N]
                                                → regex search across bodies
 watch [--paths G] [--kinds CMDR] [--once]      → stream events
 completion <shell>                             → emit shell completion
-skill install <agent>                          → install this skill
 Jotura/theme.json → custom desktop theme (references/lifecycle.md); normal edit loop
 ```
 
@@ -293,5 +290,4 @@ Jotura/theme.json → custom desktop theme (references/lifecycle.md); normal edi
 | `references/documents.md` | importing PDFs, Word, spreadsheets; plaintext and HTML files; md_store mirrors |
 | `references/batch.md` | more than one edit in a note (`--apply`) or across notes (`batch`) |
 | `references/lifecycle.md` | create, rename, trash and restore, templates, whole-body writes, watch, completion, doctor |
-| `references/agents.md` | the vault's `Agents/` folder, `agents sync`, `skill install`, the SessionStart hook |
 | `references/images.md` | looking at an image a note embeds, adding an image to a note, the `![[img.png\|300]]` sizing syntax |
