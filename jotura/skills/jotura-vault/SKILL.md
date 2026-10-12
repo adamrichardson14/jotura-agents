@@ -283,7 +283,7 @@ canvas create P [--spec FILE|-] [--attach F]  → new whiteboard from a spec (re
 canvas show B / add B --spec FILE|-            → board as JSON graph / add nodes and edges
 canvas update B --id K [--text --move --fill ...] / remove B --id K...  → change or delete by key
 canvas layout B [--frame N --layout L]         → re-lay out what the CLI made, never the user's elements
-canvas render B --out FILE.png|FILE.svg        → picture to look at after every change
+canvas render B --out FILE.png|FILE.svg [--frame N --scale N]  → picture to look at after every change
 Jotura/theme.json → custom desktop theme (references/lifecycle.md); normal edit loop
 ```
 
