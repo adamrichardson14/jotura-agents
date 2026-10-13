@@ -40,15 +40,15 @@ jotura canvas layout <board> [--frame NAME] [--layout left-right|top-down|grid]
 jotura canvas render <board> --out FILE.png|FILE.svg [--frame NAME] [--scale N]
 ```
 
-`<board>` is a vault path (the board suffix is optional, so `Projects/Sync` finds `Projects/Sync.excalidraw.md`) or a bare name that matches one board's file name. Several boards with that name exit 4 and list `candidates`; pass the path then. `create` appends `.excalidraw.md` to a name with no board suffix, exits 9 if the file exists (use `add` then) and exits 9 on `--if-hash`, since a new board has no hash. `--spec -` reads the spec from stdin.
+`<board>` is a vault path (the board suffix is optional, so `Projects/Sync` finds `Projects/Sync.excalidraw.md`, even when a folder `Projects/Sync/` exists) or a bare name that matches one board's file name. Several boards with that name exit 4 and list `candidates`; pass the path then. `create` appends `.excalidraw.md` to a name with no board suffix, exits 9 if the file exists (use `add` then) and exits 9 on `--if-hash`, since a new board has no hash. `--spec -` reads the spec from stdin.
 
 Every command that changes a board takes `--if-hash HASH`, `--dry-run`, `--diff` and `--json`. The JSON reply is `{path, hash, ids: {key: elementId}, added, changed, removed}`, plus `created: true` on `create` and `diff` with `--diff`. The counts are elements, so a box and its label count as two. `layout` takes no key, so its `ids` lists the keyed elements that moved. With `--dry-run` nothing is written and the reply is `{dryRun: true, path, currentHash, newHash, changes, preview: {kind, added, changed, removed, ids}}`.
 
 Without `--json`, these commands print one `key -> id` line per entry in `ids`, or `path: N added, N changed, N removed` when `ids` is empty.
 
-`render` writes only the output file. `--out` must end in `.svg` or `.png` (the extension picks the format); a relative path is relative to the current directory. An `--out` inside the vault is queued for sync, and it exits 15 in a view-only share. An `--out` that would overwrite an image the board uses exits 9. `--frame` draws one frame and its children. `--scale` applies to PNG only: default 2, above 0 and at most 8, and a board too large for the requested scale is drawn at a lower one.
+`render` writes only the output file. `--out` must end in `.svg` or `.png` (the extension picks the format); a relative path is relative to the current directory. An `--out` inside the vault is queued for sync, and it exits 15 in a view-only share. When `--out` names an existing file inside the vault, the old file moves to the vault trash first and `jotura restore` brings it back. An `--out` that would overwrite an image the board uses exits 9. `--frame` draws one frame and its children. `--scale` applies to PNG only: default 2, above 0 and at most 8, and a board too large for the requested scale is drawn at a lower one.
 
-The JSON reply is `{path, out, format, width, height}` plus these fields when they apply: `scale` (PNG only, the scale used), `scaleReduced: true` (only when the scale was lowered) and `missingImages` (only when images could not be loaded; vault paths or file ids, drawn as placeholders). Plain-text mode prints `rendered OUT (WxH)`, and a missing image adds `warning: N image(s) not found, drawn as placeholders: ...` on stderr. An unknown frame exits 3 and the message lists every frame, with `(unnamed) <id>` for an unnamed one and `name (id)` when two share a name.
+The JSON reply is `{path, out, format, width, height}` plus these fields when they apply: `scale` (PNG only, the scale used), `scaleReduced: true` (only when the scale was lowered) and `missingImages` (only when images could not be loaded; vault paths or file ids, drawn as placeholders) and `replacedToTrash` (only when an existing vault file was moved to the trash). Plain-text mode prints `rendered OUT (WxH)`, and a missing image adds `warning: N image(s) not found, drawn as placeholders: ...` on stderr. An unknown frame exits 3 and the message lists every frame, with `(unnamed) <id>` for an unnamed one and `name (id)` when two share a name.
 
 ## The spec
 
@@ -71,7 +71,7 @@ Board fields, all optional. An unknown field anywhere in the spec exits 9 and th
 | `nodes` | list of nodes |
 | `edges` | list of edges |
 
-`left-right` and `top-down` layer the nodes along the edges. The gap between layers widens to fit edge labels, with room for the arrow on both sides of a label. `grid` fills rows and suits cards. `none` puts nodes without coordinates in a row, in order. `none` exists in the spec only: `canvas layout --layout none` is rejected by the argument parser with exit 2. A node with both `x` and `y` keeps that position in the spec's layout.
+`left-right` and `top-down` layer the nodes along the edges. The gap between layers widens to fit edge labels, with room for the arrow on both sides of a label. `grid` fills rows and suits cards. `none` puts nodes without coordinates in a row, in order. `none` exists in the spec only: `canvas layout --layout none` exits 9. A node with both `x` and `y` keeps that position in the spec's layout.
 
 ### Nodes
 
@@ -89,7 +89,7 @@ Set exactly one content field per node.
 
 Other node fields: `id` (your key, unique in the spec), `shape` (`rect` default, `ellipse`, `diamond`, `text`; only with `text`), `x` and `y` (pin the top-left corner when both are given; for `draw`, `line` and `arrow` they place the point list), `width` and `height` (positive numbers that override the computed size; an image keeps its aspect ratio when only one is given, and free text wraps to `width`).
 
-Sizes when you give none: a box is its label plus 40 px, at least 160 by 80, and a one-line label wider than 320 px wraps to about 280 px first. A box or diamond grows to fit its label, including after `update --text`. A card is 360 by 240. An image keeps its natural size up to 480 px wide, and `width` alone scales the height to keep the aspect ratio.
+Sizes when you give none: a box is its label plus 40 px, at least 160 by 80, and a one-line label wider than 320 px wraps to about 280 px first. A box or diamond grows to fit its label, including after `update --text`. A label outside the Latin alphabet is sized approximately, and PNG renders draw it in a fallback face. A card is 360 by 240. An image keeps its natural size up to 480 px wide, and `width` alone scales the height to keep the aspect ratio.
 
 ### Style
 
@@ -134,7 +134,7 @@ The arrow points from `from` to `to`. For a relation such as "connected to", pic
 - Each spec `id` becomes that element's key. Later commands take a key, an element id or, for `update`, `remove` and `layout`, a frame name.
 - `add` refuses an `id` that is already a key on the board. Pick another id, or use `update`.
 - A box's label is part of the box. A label's id resolves to its box, so `remove <label id>` removes the box.
-- Removing a node also removes its labels and arrows. Removing a frame keeps its children and takes them out of the frame.
+- Removing a box removes its label and the arrows the CLI made to it, with their labels. An arrow a person drew stays on the board and only loses its binding to the removed box. Removing a frame keeps its children and takes them out of the frame.
 - An edge has no key. Name it by the element id that `show` lists: `remove --id <arrow id>` deletes that edge and its label.
 
 ## Changing one element
@@ -167,14 +167,13 @@ The arrow points from `from` to `to`. For a relation such as "connected to", pic
   ],
   "edges": [
     { "id": "Qp0xYt7a", "from": "app", "to": "api", "label": "push / pull",
-      "style": { "stroke": "black", "fill": "transparent", "fillStyle": "solid",
-                 "strokeWidth": "bold", "strokeStyle": "solid", "roughness": "artist", "opacity": 100,
-                 "font": "hand", "fontSize": "m" } }
+      "style": { "stroke": "black", "strokeWidth": "bold", "strokeStyle": "solid",
+                 "roughness": "artist", "opacity": 100, "font": "hand", "fontSize": "m" } }
   ]
 }
 ```
 
-`kind` is `box`, `text`, `note`, `image`, `draw`, `line`, `arrow` or `frame`. `note` holds the `[[link]]` of a card, `image` the file of an image, and a frame's `text` is its name. `key` is left out for an element that has none, and so are `shape`, `text`, `note`, `image` and `frame` when they do not apply. Labels are folded into their box or arrow, so they are not separate nodes. An edge's `style` has the same fields as a node's (`font` and `fontSize` only when it has a label). An image's `style` leaves out the stroke fields. Colours, widths, roughness and font sizes come back as the names in the style table when one matches and as raw values otherwise. `from` and `to` use a key when the element has one and an element id otherwise. `by` is `agent` for what the CLI created and `user` for what a person drew. Run `show` before touching a board you did not just build, and again whenever the user may have changed it. The output is long because every node carries the full style block. Filter it:
+`kind` is `box`, `text`, `note`, `image`, `draw`, `line`, `arrow` or `frame`. `note` holds the `[[link]]` of a card, `image` the file of an image, and a frame's `text` is its name. `key` is left out for an element that has none, and so are `shape`, `text`, `note`, `image` and `frame` when they do not apply. Labels are folded into their box or arrow, so they are not separate nodes. An edge's `style` has the node fields minus `fill` and `fillStyle` (`font` and `fontSize` only when it has a label). An image's `style` leaves out the stroke fields. Colours, widths, roughness and font sizes come back as the names in the style table when one matches and as raw values otherwise. `from` and `to` use a key when the element has one and an element id otherwise. `by` is `agent` for what the CLI created and `user` for what a person drew. Run `show` before touching a board you did not just build, and again whenever the user may have changed it. The output is long because every node carries the full style block. Filter it:
 
 ```sh
 jotura canvas show "Whiteboard/Launch plan" | jq '.nodes[] | {id, key, text, by}'
@@ -260,16 +259,16 @@ jotura canvas add "Whiteboard/Launch plan" --attach ~/Downloads/dashboard.png --
 EOF
 ```
 
-On a `.excalidraw.md` board the attached file is copied to `assets/<name>` (with a suffix such as `-1` when the name is taken) and the board links it there. An image has no border, so put it in a frame or add a box node behind it. A plain `.excalidraw` board embeds the bytes. A name that is neither attached nor in the vault exits 3. If an image is later missing, `render` draws a placeholder and lists it under `missingImages`.
+On a `.excalidraw.md` board the attached file is copied to `assets/<name>` (with a suffix such as `-1` when the name is taken) and the board links it there. An image has no border, so put it in a frame or add a box node behind it. A plain `.excalidraw` board embeds the bytes. An image over 16 MiB exits 9, and on a plain `.excalidraw` board an image over 5 MiB exits 9 too; use a `.excalidraw.md` board for large images. A name that is neither attached nor in the vault exits 3. If an image is later missing, `render` draws a placeholder and lists it under `missingImages`.
 
 ## Exit codes
 
 | Code | Meaning | What to do |
 |---|---|---|
-| 2 | `HashConflict`, the board changed since your `--if-hash`; the error carries a `currentVsIntended` diff. Also `canvas layout --layout none`, which the argument parser rejects | run `show` for the new hash and state, then re-apply your change; for `--layout`, use `left-right`, `top-down` or `grid` |
+| 2 | `HashConflict`, the board changed since your `--if-hash`; the error carries a `currentVsIntended` diff | run `show` for the new hash and state, then re-apply your change |
 | 3 | `NotFound`: the board, a key, element id or frame name, the spec file, an `--attach` file, a vault image, or an edge endpoint does not exist | run `show` and use a key or id it lists; check the path; for an edge, add the node to the spec or use the key of an element already on the board |
 | 4 | `Ambiguous`, a bare board name matches several boards | pass the vault path from `candidates` |
 | 8 | `PermissionDenied` | tell the user |
-| 9 | `InvalidArgs`: a bad spec or flag value, and the message names the field and lists the valid values. Also an edge whose ends overlap, a duplicate spec id, `add` with an id that is already a key, an empty `id`, `text` or `label`, `draw`, `line` or `arrow` points that all sit on one spot, `create` on an existing board, `--if-hash` on `create`, a file that is not a board, an `update` with nothing to change, an edge asked to move or take a fill, `--stroke`, `--stroke-style` or `--stroke-width` on an image, a `columns` value outside 1 to 20, and a `render --out` that would overwrite an image the board uses | fix the field the message names and retry, since nothing was written; for an overlap, move one of the two elements; for an existing key, pick another id or use `update`; for an image, wrap it in a frame or add a box node behind it; for an existing board, use `add`; for `render`, choose another `--out` |
+| 9 | `InvalidArgs`: a bad spec or flag value, and the message names the field and lists the valid values. Also an edge whose ends overlap, a duplicate spec id, `add` with an id that is already a key, an empty `id`, `text` or `label`, `draw`, `line` or `arrow` points that all sit on one spot, `create` on an existing board, `--if-hash` on `create`, a file that is not a board, an `update` with nothing to change, an edge asked to move or take a fill, `--stroke`, `--stroke-style` or `--stroke-width` on an image, a `columns` value outside 1 to 20, `canvas layout --layout none`, an image over 16 MiB (or over 5 MiB on a plain `.excalidraw` board), and a `render --out` that would overwrite an image the board uses | fix the field the message names and retry, since nothing was written; for an overlap, move one of the two elements; for an existing key, pick another id or use `update`; for an image, wrap it in a frame or add a box node behind it; for an existing board, use `add`; for `render`, choose another `--out`; for `--layout`, use `left-right`, `top-down` or `grid`; for a large image, shrink it or use a `.excalidraw.md` board |
 | 14 | `TargetMissing`, the board was deleted or moved before the write | check the board still exists, then recreate or retry |
 | 15 | `ReadOnlyShare`, the board, or a `render --out` inside the vault, is in a view-only share | stop and ask the owner for editor access, or render to a path outside the share |
