@@ -279,10 +279,10 @@ grep PAT [-i -x -w -c -l -L] [--include G --exclude G] [--max-count N]
                                                → regex search across bodies
 watch [--paths G] [--kinds CMDR] [--once]      → stream events
 completion <shell>                             → emit shell completion
-canvas create P [--spec FILE|-] [--attach F]  → new whiteboard from a spec (references/canvas.md)
-canvas show B / add B --spec FILE|-            → board as JSON graph / add nodes and edges
+canvas create P [--spec FILE|-] [--attach F]  → new whiteboard from a spec, all its frames at once (references/canvas.md)
+canvas show B / add B --spec FILE|-            → board as JSON graph / add nodes and edges; --json gives ids and rects
 canvas update B --id K [--text --move --fill ...] / remove B --id K...  → change or delete by key
-canvas layout B [--frame N --layout L]         → re-lay out what the CLI made, never the user's elements
+canvas layout B [--frame N --layout L]         → re-lay out what the CLI made (all CLI frames together), never the user's elements
 canvas render B --out FILE.png|FILE.svg [--frame N --scale N]  → picture to look at after every change
 Jotura/theme.json → custom desktop theme (references/lifecycle.md); normal edit loop
 ```
