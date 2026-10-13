@@ -26,7 +26,9 @@ jotura canvas render "Projects/Sync architecture" --out /tmp/sync.png
 
 Render and look before you report the board as done. A render differs slightly from the app in line breaks and stroke wobble, so judge structure and spacing from it.
 
-On a board you did not build, run the change with `--dry-run --diff` first and read the diff before you write it.
+On a board you did not build, run the change with `--dry-run --diff` first and read the diff before you write it. A dry run's `newHash` differs from the hash of the real write, because new ids and seeds are random. Take the hash for `--if-hash` from `show` or from the reply of a real write.
+
+`--vault <path>` is a global flag on every command, and `JOTURA_VAULT` sets it for the shell. Windows paths work with forward slashes, as in `--vault C:/Users/me/vault`. A relative `--out` on `render` is relative to the current directory.
 
 ```sh
 jotura canvas create <path> [--spec FILE|-] [--attach FILE]...
@@ -65,10 +67,11 @@ Board fields, all optional. An unknown field anywhere in the spec exits 9 and th
 |---|---|
 | `frame` | a name; puts this spec's nodes and edges in a frame of that name. A frame the CLI made earlier with the same name is reused and grown. A frame a person drew is left alone and a second frame is made |
 | `layout` | `left-right` (default), `top-down`, `grid`, `none` |
+| `columns` | a whole number from 1 to 20, for `layout: "grid"` only. The default is the number of nodes for up to 3 nodes, and otherwise the square root of the node count rounded up |
 | `nodes` | list of nodes |
 | `edges` | list of edges |
 
-`left-right` and `top-down` layer the nodes along the edges. `grid` fills rows and suits cards. `none` puts nodes without coordinates in a row, in order. `none` exists in the spec only: `canvas layout --layout none` is rejected by the argument parser with exit 2. A node with both `x` and `y` keeps that position in the spec's layout.
+`left-right` and `top-down` layer the nodes along the edges. The gap between layers widens to fit edge labels, with room for the arrow on both sides of a label. `grid` fills rows and suits cards. `none` puts nodes without coordinates in a row, in order. `none` exists in the spec only: `canvas layout --layout none` is rejected by the argument parser with exit 2. A node with both `x` and `y` keeps that position in the spec's layout.
 
 ### Nodes
 
@@ -78,15 +81,15 @@ Set exactly one content field per node.
 |---|---|
 | `text` | a box with the text as its label; `shape` picks the box |
 | `text` with `shape: "text"` | free text with no box |
-| `note` | a card linking a note, written as one `[[Note name]]` |
-| `image` | an image: a vault path or file name (resolved like a wikilink), or the file name of a file passed with `--attach FILE`. PNG, JPEG, GIF, WebP and SVG |
+| `note` | a card linking a note, written as one `[[Note name]]`. A render shows the note's title and a "Note" caption; the desktop app shows a linked card for the note |
+| `image` | an image: a vault path or file name (resolved like a wikilink), or the file name of a file passed with `--attach FILE`. PNG, JPEG, GIF, WebP and SVG. An image has no border: put it in a frame or add a box node behind it. `--stroke`, `--stroke-style` and `--stroke-width` on an image exit 9 |
 | `draw` | a freehand stroke from a list of `[x, y]` points, at least 2 and not all the same; optional `pressure` list with one number per point |
 | `line` | a free line from at least 2 points |
 | `arrow` | an arrow bound to nothing, from at least 2 points |
 
 Other node fields: `id` (your key, unique in the spec), `shape` (`rect` default, `ellipse`, `diamond`, `text`; only with `text`), `x` and `y` (pin the top-left corner when both are given; for `draw`, `line` and `arrow` they place the point list), `width` and `height` (positive numbers that override the computed size; an image keeps its aspect ratio when only one is given, and free text wraps to `width`).
 
-Sizes when you give none: a box is its label plus 40 px, at least 160 by 80, and a one-line label wider than 320 px wraps to about 280 px first. A card is 360 by 240. An image keeps its natural size up to 480 px wide.
+Sizes when you give none: a box is its label plus 40 px, at least 160 by 80, and a one-line label wider than 320 px wraps to about 280 px first. A box or diamond grows to fit its label, including after `update --text`. A card is 360 by 240. An image keeps its natural size up to 480 px wide, and `width` alone scales the height to keep the aspect ratio.
 
 ### Style
 
@@ -104,7 +107,7 @@ Any node accepts these. The defaults are Excalidraw's.
 | `font` | `hand`, `normal`, `code` | `hand` |
 | `fontSize` | `s` (16), `m` (20), `l` (28), `xl` (36), or a positive number | `m` |
 
-Palette names: `gray`, `red`, `pink`, `grape`, `violet`, `blue`, `cyan`, `teal`, `green`, `yellow`, `orange`, `bronze`, `black`, `white`, `transparent`. Names are case-insensitive. `fillStyle` defaults to `solid`, so a `fill` shows as a flat colour with no further fields. On a box, `stroke` and `fill` style the shape, and `font` and `fontSize` style its label.
+Palette names: `gray`, `red`, `pink`, `grape`, `violet`, `blue`, `cyan`, `teal`, `green`, `yellow`, `orange`, `bronze`, `black`, `white`, `transparent`. Names are case-insensitive. `fillStyle` defaults to `solid`, so a `fill` shows as a flat colour with no further fields. On a box, `stroke` and `fill` style the shape, and `font` and `fontSize` style its label. `fill` colours the inside of a shape with the light shade. `stroke` colours the outline and the text with the dark shade. A request to "colour it blue" usually means `fill`.
 
 ### Edges
 
@@ -116,7 +119,13 @@ Palette names: `gray`, `red`, `pink`, `grape`, `violet`, `blue`, `cyan`, `teal`,
 | `stroke` | a colour, as above; a palette name uses its dark shade |
 | `startHead`, `endHead` | `none`, `arrow`, `bar`, `dot`, `triangle`; the end defaults to `arrow`, the start to `none` |
 
-An edge has no key. Only boxes, free text, notes, images and frames can be connected. A self-edge (`from` equal to `to`) is refused; add an `arrow` node with points instead. Two ends that overlap are refused with "overlap, so the arrow has no length" (exit 9); move one of them. An edge that names a node that does not exist exits 3. The arrows bend around boxes and labels without help.
+The arrow points from `from` to `to`. For a relation such as "connected to", pick the direction the data or the action flows. An edge has no key. Only boxes, free text, notes, images and frames can be connected. A self-edge (`from` equal to `to`) is refused; add an `arrow` node with points instead. Two ends that overlap are refused with "overlap, so the arrow has no length" (exit 9); move one of them. An edge that names a node that does not exist exits 3. The arrows bend around boxes and labels without help. Cycles and loop-back edges are routed automatically: a loop-back edge bends around the outside of the layout and enters the target from its side. You cannot choose which side an arrow uses.
+
+## Spacing and titles
+
+- `add` puts the new block to the right of the element its first new edge connects to. When that spot is taken it uses the next free spot below. With no connecting edge the block goes to the right of everything on the board. `add` leaves 60 px around a new node.
+- To change spacing, pin `x` and `y` on nodes in the spec, or run `update --move X,Y` afterwards. Moving a node inside a frame the CLI made grows the frame to hold it.
+- Grid cells start at 0,0, and a card cell is 360 by 240 with 40 px gaps. For a title above a board or a grid, add a free text node with a pinned position above the top-left of the laid-out nodes: `{ "text": "Reading list", "shape": "text", "fontSize": "xl", "x": 0, "y": -80 }`. A frame name works as a small grey label when a title does not need to stand out.
 
 ## Keys
 
@@ -163,7 +172,14 @@ An edge has no key. Only boxes, free text, notes, images and frames can be conne
 }
 ```
 
-`kind` is `box`, `text`, `note`, `image`, `draw`, `line`, `arrow` or `frame`. `note` holds the `[[link]]` of a card, `image` the file of an image, and a frame's `text` is its name. `key` is left out for an element that has none, and so are `shape`, `text`, `note`, `image` and `frame` when they do not apply. Labels are folded into their box or arrow, so they are not separate nodes. An edge's `style` has the same fields as a node's (`font` and `fontSize` only when it has a label). Colours, widths, roughness and font sizes come back as the names in the style table when one matches and as raw values otherwise. `from` and `to` use a key when the element has one and an element id otherwise. `by` is `agent` for what the CLI created and `user` for what a person drew. Run `show` before touching a board you did not just build, and again whenever the user may have changed it.
+`kind` is `box`, `text`, `note`, `image`, `draw`, `line`, `arrow` or `frame`. `note` holds the `[[link]]` of a card, `image` the file of an image, and a frame's `text` is its name. `key` is left out for an element that has none, and so are `shape`, `text`, `note`, `image` and `frame` when they do not apply. Labels are folded into their box or arrow, so they are not separate nodes. An edge's `style` has the same fields as a node's (`font` and `fontSize` only when it has a label). Colours, widths, roughness and font sizes come back as the names in the style table when one matches and as raw values otherwise. `from` and `to` use a key when the element has one and an element id otherwise. `by` is `agent` for what the CLI created and `user` for what a person drew. Run `show` before touching a board you did not just build, and again whenever the user may have changed it. The output is long because every node carries the full style block. Filter it:
+
+```sh
+jotura canvas show "Whiteboard/Launch plan" | jq '.nodes[] | {id, key, text, by}'
+jotura canvas show "Whiteboard/Launch plan" | python -c "import json,sys; [print(n['id'], n.get('key'), n.get('text')) for n in json.load(sys.stdin)['nodes']]"
+```
+
+The second line is for a machine without `jq`.
 
 ## Looking after the user's drawing
 
@@ -242,7 +258,7 @@ jotura canvas add "Whiteboard/Launch plan" --attach ~/Downloads/dashboard.png --
 EOF
 ```
 
-On a `.excalidraw.md` board the attached file is copied into `assets/` and linked from the board. A plain `.excalidraw` board embeds the bytes. A name that is neither attached nor in the vault exits 3. If an image is later missing, `render` draws a placeholder and lists it under `missingImages`.
+On a `.excalidraw.md` board the attached file is copied to `assets/<name>` (with a suffix such as `-1` when the name is taken) and the board links it there. An image has no border, so put it in a frame or add a box node behind it. A plain `.excalidraw` board embeds the bytes. A name that is neither attached nor in the vault exits 3. If an image is later missing, `render` draws a placeholder and lists it under `missingImages`.
 
 ## Exit codes
 
@@ -252,6 +268,6 @@ On a `.excalidraw.md` board the attached file is copied into `assets/` and linke
 | 3 | `NotFound`: the board, a key, element id or frame name, the spec file, an `--attach` file, a vault image, or an edge endpoint does not exist | run `show` and use a key or id it lists; check the path; for an edge, add the node to the spec or use the key of an element already on the board |
 | 4 | `Ambiguous`, a bare board name matches several boards | pass the vault path from `candidates` |
 | 8 | `PermissionDenied` | tell the user |
-| 9 | `InvalidArgs`: a bad spec or flag value, and the message names the field and lists the valid values. Also an edge whose ends overlap, a duplicate spec id, `add` with an id that is already a key, an empty `id`, `text` or `label`, `draw`, `line` or `arrow` points that all sit on one spot, `create` on an existing board, `--if-hash` on `create`, a file that is not a board, an `update` with nothing to change, an edge asked to move or take a fill, and a `render --out` that would overwrite an image the board uses | fix the field the message names and retry, since nothing was written; for an overlap, move one of the two elements; for an existing key, pick another id or use `update`; for an existing board, use `add`; for `render`, choose another `--out` |
+| 9 | `InvalidArgs`: a bad spec or flag value, and the message names the field and lists the valid values. Also an edge whose ends overlap, a duplicate spec id, `add` with an id that is already a key, an empty `id`, `text` or `label`, `draw`, `line` or `arrow` points that all sit on one spot, `create` on an existing board, `--if-hash` on `create`, a file that is not a board, an `update` with nothing to change, an edge asked to move or take a fill, `--stroke`, `--stroke-style` or `--stroke-width` on an image, a `columns` value outside 1 to 20, and a `render --out` that would overwrite an image the board uses | fix the field the message names and retry, since nothing was written; for an overlap, move one of the two elements; for an existing key, pick another id or use `update`; for an image, wrap it in a frame or add a box node behind it; for an existing board, use `add`; for `render`, choose another `--out` |
 | 14 | `TargetMissing`, the board was deleted or moved before the write | check the board still exists, then recreate or retry |
 | 15 | `ReadOnlyShare`, the board, or a `render --out` inside the vault, is in a view-only share | stop and ask the owner for editor access, or render to a path outside the share |
