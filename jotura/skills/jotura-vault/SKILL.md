@@ -279,8 +279,8 @@ grep PAT [-i -x -w -c -l -L] [--include G --exclude G] [--max-count N]
                                                → regex search across bodies
 watch [--paths G] [--kinds CMDR] [--once]      → stream events
 completion <shell>                             → emit shell completion
-canvas create P [--spec FILE|-] [--attach F]  → new whiteboard from a spec, all its frames at once (references/canvas.md)
-canvas show B / add B --spec FILE|-            → board as JSON graph / add nodes and edges; --json gives ids and rects
+canvas create P [--spec FILE|-] [--attach F]  → new canvas from a spec, all its frames at once (references/canvas.md)
+canvas show B / add B --spec FILE|-            → canvas as JSON graph / add nodes and edges; --json gives ids and rects
 canvas update B --id K [--text --move --fill ...] / remove B --id K...  → change or delete by key
 canvas layout B [--frame N --layout L]         → re-lay out what the CLI made (all CLI frames together), never the user's elements
 canvas render B --out FILE.png|FILE.svg [--frame N --scale N]  → picture to look at after every change
@@ -296,4 +296,4 @@ Jotura/theme.json → custom desktop theme (references/lifecycle.md); normal edi
 | `references/batch.md` | more than one edit in a note (`--apply`) or across notes (`batch`) |
 | `references/lifecycle.md` | create, rename, trash and restore, templates, whole-body writes, watch, completion, doctor |
 | `references/images.md` | looking at an image a note embeds, adding an image to a note, the `![[img.png\|300]]` sizing syntax |
-| `references/canvas.md` | building or changing a whiteboard with jotura canvas |
+| `references/canvas.md` | building or changing a canvas with jotura canvas |
