@@ -257,7 +257,7 @@ tag add/remove/list P [T]                     → tags (.md only, else exit 9)
 tags [--notes T]                              → every tag with counts / notes carrying T; counts frontmatter and inline body tags, `tag list P` reads the frontmatter block only
 create PARENT NAME [--template T]              → new note (optionally from template)
 rename A B / delete P                          → rename / permanent delete
-trash P / trash list / restore P [--rename-to N]  → soft-delete, list, restore
+trash P / trash list / trash restore P [--rename-to N]  → soft-delete, list, restore
 trash purge P / trash empty --force            → permanent removal
 templates list/show/create/delete              → manage templates
 today [--read] [--append T] [--date D] [--template T] → daily-note helper
