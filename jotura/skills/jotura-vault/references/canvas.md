@@ -1,15 +1,15 @@
-# Canvas boards
+# Canvases
 
-A board is an Excalidraw whiteboard stored in the vault as `Name.excalidraw.md` (the default) or `Name.excalidraw` (plain JSON). The user opens it as an endless canvas in the desktop app, and Obsidian opens it too. You describe the board in a small spec and `jotura canvas` writes the Excalidraw elements for you, with the layout and the arrow routing done. You never write Excalidraw JSON.
+A canvas is an Excalidraw drawing stored in the vault as `Name.excalidraw.md` (the default) or `Name.excalidraw` (plain JSON). The user opens it as an endless canvas in the desktop app, and Obsidian opens it too. You describe the canvas in a small spec and `jotura canvas` writes the Excalidraw elements for you, with the layout and the arrow routing done. You never write Excalidraw JSON.
 
-Make a board when the content is spatial: an architecture diagram, a flow, note cards in a grid, a sketch with labelled arrows. Use a plain note for text the user will read from top to bottom.
+Make a canvas when the content is spatial: an architecture diagram, a flow, note cards in a grid, a sketch with labelled arrows. Use a plain note for text the user will read from top to bottom.
 
-**Never edit the `## Drawing` block by hand**, and never `edit`, `write` or `batch` a board. The block holds element ids, seeds, versions and bindings that must agree with each other, and a hand edit that breaks one loses the user's drawing. Every change goes through `jotura canvas`.
+**Never edit the `## Drawing` block by hand**, and never `edit`, `write` or `batch` a canvas file. The block holds element ids, seeds, versions and bindings that must agree with each other, and a hand edit that breaks one loses the user's drawing. Every change goes through `jotura canvas`.
 
 ## The workflow
 
 ```sh
-# 1. Create the board from a spec
+# 1. Create the canvas from a spec
 jotura canvas create "Projects/Sync architecture" --spec spec.json --json
 
 # 2. Render it and look at it (open the PNG with your image tool, see references/images.md)
@@ -24,36 +24,36 @@ jotura canvas remove "Projects/Sync architecture" --id r2
 jotura canvas render "Projects/Sync architecture" --out /tmp/sync.png
 ```
 
-Render and look before you report the board as done. A render differs slightly from the app in line breaks and stroke wobble, so judge structure and spacing from it.
+Render and look before you report the canvas as done. A render differs slightly from the app in line breaks and stroke wobble, so judge structure and spacing from it.
 
-On a board you did not build, run the change with `--dry-run --diff` first and read the diff before you write it. To see where new nodes will land, run `add --dry-run --json` and read `preview.rects`; they match the real write. A dry run's `newHash` differs from the hash of the real write, because new ids and seeds are random. Take the hash for `--if-hash` from `show` or from the reply of a real write.
+On a canvas you did not build, run the change with `--dry-run --diff` first and read the diff before you write it. To see where new nodes will land, run `add --dry-run --json` and read `preview.rects`; they match the real write. A dry run's `newHash` differs from the hash of the real write, because new ids and seeds are random. Take the hash for `--if-hash` from `show` or from the reply of a real write.
 
 `--vault <path>` is a global flag on every command, and `JOTURA_VAULT` sets it for the shell. Windows paths work with forward slashes, as in `--vault C:/Users/me/vault`. A relative `--out` on `render` is relative to the current directory.
 
 ```sh
 jotura canvas create <path> [--spec FILE|-] [--attach FILE]...
-jotura canvas show <board>
-jotura canvas add <board> --spec FILE|- [--attach FILE]...
-jotura canvas update <board> --id ID [--text T] [--move X,Y] [--resize W,H] [style flags]
-jotura canvas remove <board> --id ID...
-jotura canvas layout <board> [--frame NAME] [--layout left-right|top-down|grid]
-jotura canvas render <board> --out FILE.png|FILE.svg [--frame NAME] [--scale N]
+jotura canvas show <canvas>
+jotura canvas add <canvas> --spec FILE|- [--attach FILE]...
+jotura canvas update <canvas> --id ID [--text T] [--move X,Y] [--resize W,H] [style flags]
+jotura canvas remove <canvas> --id ID...
+jotura canvas layout <canvas> [--frame NAME] [--layout left-right|top-down|grid]
+jotura canvas render <canvas> --out FILE.png|FILE.svg [--frame NAME] [--scale N]
 ```
 
-`<board>` is a vault path (the board suffix is optional, so `Projects/Sync` finds `Projects/Sync.excalidraw.md`, even when a folder `Projects/Sync/` exists) or a bare name that matches one board's file name. Several boards with that name exit 4 and list `candidates`; pass the path then. `create` appends `.excalidraw.md` to a name with no board suffix, exits 9 if the file exists (use `add` then) and exits 9 on `--if-hash`, since a new board has no hash. `--spec -` reads the spec from stdin.
+`<canvas>` is a vault path (the canvas suffix is optional, so `Projects/Sync` finds `Projects/Sync.excalidraw.md`, even when a folder `Projects/Sync/` exists) or a bare name that matches one canvas's file name. Several canvases with that name exit 4 and list `candidates`; pass the path then. `create` appends `.excalidraw.md` to a name with no canvas suffix, exits 9 if the file exists (use `add` then) and exits 9 on `--if-hash`, since a new canvas has no hash. `--spec -` reads the spec from stdin.
 
-To replace a board wholesale, move it to the vault trash and create it again. `trash` takes the board's file path with its suffix, and a bare board name exits 3. `jotura trash restore "Projects/Sync.excalidraw.md"` brings the old board back. Use `trash`, never `jotura delete`, which removes the file for good.
+To replace a canvas wholesale, move it to the vault trash and create it again. `trash` takes the canvas file path with its suffix, and a bare canvas name exits 3. `jotura trash restore "Projects/Sync.excalidraw.md"` brings the old canvas back. Use `trash`, never `jotura delete`, which removes the file for good.
 
 ```sh
 jotura trash "Projects/Sync.excalidraw.md"
 jotura canvas create "Projects/Sync" --spec spec.json --json
 ```
 
-Every command that changes a board takes `--if-hash HASH`, `--dry-run`, `--diff` and `--json`. The JSON reply is `{path, hash, ids: {key: elementId}, added, changed, removed}`, plus `created: true` on `create` and `diff` with `--diff`. On `create` and `add` it also carries `rects`, the placed rectangle of each new keyed node as `{x, y, width, height}`, keyed like `ids`; read it to check where nodes landed without a render. The counts are elements, so a box and its label count as two. `layout` takes no key, so its `ids` lists the keyed elements that moved. With `--dry-run` nothing is written and the reply is `{dryRun: true, path, currentHash, newHash, changes, preview: {kind, added, changed, removed, ids, rects}}`, with `rects` on `create` and `add` only.
+Every command that changes a canvas takes `--if-hash HASH`, `--dry-run`, `--diff` and `--json`. The JSON reply is `{path, hash, ids: {key: elementId}, added, changed, removed}`, plus `created: true` on `create` and `diff` with `--diff`. On `create` and `add` it also carries `rects`, the placed rectangle of each new keyed node as `{x, y, width, height}`, keyed like `ids`; read it to check where nodes landed without a render. The counts are elements, so a box and its label count as two. `layout` takes no key, so its `ids` lists the keyed elements that moved. With `--dry-run` nothing is written and the reply is `{dryRun: true, path, currentHash, newHash, changes, preview: {kind, added, changed, removed, ids, rects}}`, with `rects` on `create` and `add` only.
 
 Without `--json`, these commands print one `key -> id` line per entry in `ids`, or `path: N added, N changed, N removed` when `ids` is empty.
 
-`render` writes only the output file. `--out` must end in `.svg` or `.png` (the extension picks the format); a relative path is relative to the current directory. An `--out` inside the vault is queued for sync, and it exits 15 in a view-only share. When `--out` names an existing file inside the vault, the old file moves to the vault trash first and `jotura trash restore` brings it back. An `--out` that would overwrite an image the board uses exits 9. `--frame` draws one frame and its children. `--scale` applies to PNG only: default 2, above 0 and at most 8, and a board too large for the requested scale is drawn at a lower one.
+`render` writes only the output file. `--out` must end in `.svg` or `.png` (the extension picks the format); a relative path is relative to the current directory. An `--out` inside the vault is queued for sync, and it exits 15 in a view-only share. When `--out` names an existing file inside the vault, the old file moves to the vault trash first and `jotura trash restore` brings it back. An `--out` that would overwrite an image the canvas uses exits 9. `--frame` draws one frame and its children. `--scale` applies to PNG only: default 2, above 0 and at most 8, and a canvas too large for the requested scale is drawn at a lower one.
 
 The JSON reply is `{path, out, format, width, height}` plus these fields when they apply: `scale` (PNG only, the scale used), `scaleReduced: true` (only when the scale was lowered) and `missingImages` (only when images could not be loaded; vault paths or file ids, drawn as placeholders) and `replacedToTrash` (only when an existing vault file was moved to the trash). Plain-text mode prints `rendered OUT (WxH)`, and a missing image adds `warning: N image(s) not found, drawn as placeholders: ...` on stderr. An unknown frame exits 3 and the message lists every frame, with `(unnamed) <id>` for an unnamed one and `name (id)` when two share a name.
 
@@ -68,7 +68,7 @@ The JSON reply is `{path, out, format, width, height}` plus these fields when th
 }
 ```
 
-Board fields, all optional. An unknown field anywhere in the spec exits 9 and the message lists the fields that exist.
+Top-level spec fields, all optional. An unknown field anywhere in the spec exits 9 and the message lists the fields that exist.
 
 | Field | Values |
 |---|---|
@@ -122,7 +122,7 @@ Palette names: `gray`, `red`, `pink`, `grape`, `violet`, `blue`, `cyan`, `teal`,
 
 | Field | Values |
 |---|---|
-| `from`, `to` | required: a node id in this spec, or the key or element id of something already on the board. A frame name does not resolve here |
+| `from`, `to` | required: a node id in this spec, or the key or element id of something already on the canvas. A frame name does not resolve here |
 | `label` | text on the arrow |
 | `style` | `solid` (default), `dashed`, `dotted` |
 | `stroke` | a colour, as above; a palette name uses its dark shade |
@@ -132,7 +132,7 @@ The arrow points from `from` to `to`. For a relation such as "connected to", pic
 
 ### Several frames
 
-Build a board with several frames in one `create`, and give each node its own `frame`. Adding the frames one `add` at a time places every new frame beside the last one, so the board comes out as a staircase instead of a flow.
+Build a canvas with several frames in one `create`, and give each node its own `frame`. Adding the frames one `add` at a time places every new frame beside the last one, so the canvas comes out as a staircase instead of a flow.
 
 ```sh
 jotura canvas create "Projects/Stack" --spec - --json <<'EOF'
@@ -161,21 +161,21 @@ In a spec with several frames, pin every node of a frame or none of them. A fram
 
 ## Placement, spacing and titles
 
-- `add` puts the new block 120 px to the right of the element its first new edge connects to, centred on it. When that spot is taken it steps down 40 px at a time to the next free spot. With no connecting edge the block goes to the right of everything on the board. `add` leaves 60 px between a new node and the boxes, text and frames already there, and 20 px between it and existing arrows.
+- `add` puts the new block 120 px to the right of the element its first new edge connects to, centred on it. When that spot is taken it steps down 40 px at a time to the next free spot. With no connecting edge the block goes to the right of everything on the canvas. `add` leaves 60 px between a new node and the boxes, text and frames already there, and 20 px between it and existing arrows.
 - When the spec's `frame` names a frame the CLI made earlier, `add` places the block inside that frame by the same rule: the frame itself does not count as taken, and it grows to hold the block. A `frame` that makes a new frame keeps the block clear of everything by the frame's padding and title as well.
 - When an `add` spec puts nodes in several frames, each frame is placed as its own block in turn: frames the CLI made earlier first, then nodes without a frame, then new frames, so a new frame never lands inside an existing one.
-- Let the layout place nodes. Pin `x` and `y` only when the picture needs an arrangement the layout cannot express, such as a map, a floor plan, a timeline at fixed dates or a title above the board. Pinning every node turns the layout off and leaves the arrow routing to work around your coordinates.
+- Let the layout place nodes. Pin `x` and `y` only when the picture needs an arrangement the layout cannot express, such as a map, a floor plan, a timeline at fixed dates or a title above the canvas. Pinning every node turns the layout off and leaves the arrow routing to work around your coordinates.
 - To change spacing, pin `x` and `y` on nodes in the spec, or run `update --move X,Y` afterwards. Moving a node inside a frame the CLI made grows the frame to hold it. Pinned nodes never take a layout slot, so the laid-out nodes still start at (0,0).
-- Grid cells start at 0,0, and a card cell is 360 by 240 with 40 px gaps. For a title above a board or a grid, add a free text node with a pinned position above the top-left of the laid-out nodes: `{ "text": "Reading list", "shape": "text", "fontSize": "xl", "x": 0, "y": -80 }`. The title sits at y -80 above nodes that start at (0,0). Free text is 1.25 times its font size tall per line in the hand font, so a `m` (20 px) line is 25 px high. A frame name works as a small grey label when a title does not need to stand out.
+- Grid cells start at 0,0, and a card cell is 360 by 240 with 40 px gaps. For a title above a canvas or a grid, add a free text node with a pinned position above the top-left of the laid-out nodes: `{ "text": "Reading list", "shape": "text", "fontSize": "xl", "x": 0, "y": -80 }`. The title sits at y -80 above nodes that start at (0,0). Free text is 1.25 times its font size tall per line in the hand font, so a `m` (20 px) line is 25 px high. A frame name works as a small grey label when a title does not need to stand out.
 - To put a frame around a single node, for example to give an image a visible border, create the other nodes first and then `canvas add` that node with `frame` set. A frame pads its children by 40 px, and its name shows as a small grey label above it.
 - To make cards for the notes in a folder, list them with `jotura ls --folder <folder> --json` and put one `note` node per path in the spec.
 
 ## Keys
 
 - Each spec `id` becomes that element's key. Later commands take a key, an element id or, for `update`, `remove` and `layout`, a frame name.
-- `add` refuses an `id` that is already a key on the board. Pick another id, or use `update`.
+- `add` refuses an `id` that is already a key on the canvas. Pick another id, or use `update`.
 - A box's label is part of the box. A label's id resolves to its box, so `remove <label id>` removes the box.
-- Removing a box removes its label and the arrows the CLI made to it, with their labels. An arrow a person drew stays on the board and only loses its binding to the removed box. Removing a frame keeps its children and takes them out of the frame.
+- Removing a box removes its label and the arrows the CLI made to it, with their labels. An arrow a person drew stays on the canvas and only loses its binding to the removed box. Removing a frame keeps its children and takes them out of the frame.
 - An edge has no key. Name it by the element id that `show` lists: `remove --id <arrow id>` deletes that edge and its label.
 
 ## Changing one element
@@ -188,11 +188,11 @@ In a spec with several frames, pin every node of a frame or none of them. A fram
 - `--resize` exits 9 on `draw`, `line` and `arrow` elements.
 - An edge accepts `--text`, `--stroke`, `--stroke-width`, `--stroke-style`, `--opacity`, `--roughness`, `--font` and `--font-size`. It refuses `--move`, `--resize`, `--fill` and `--fill-style` with exit 9, because edges follow the boxes they join. Move a box instead.
 
-`layout` re-arranges boxes, notes, images and free text that the CLI created, on the whole board or in one frame (`--frame` takes a frame name or id). Freehand strokes, lines, free arrows and frames stay where they are, and so does everything a person drew. It does move nodes you pinned with `x` and `y`. Arrows are routed again afterwards, and frames the CLI made are resized to fit. On a board with several CLI frames, `layout` lays all the frames out together, the same way `create` does with several frames. `--layout` takes `left-right` (the default), `top-down` or `grid`; `none` exits 9.
+`layout` re-arranges boxes, notes, images and free text that the CLI created, on the whole canvas or in one frame (`--frame` takes a frame name or id). Freehand strokes, lines, free arrows and frames stay where they are, and so does everything a person drew. It does move nodes you pinned with `x` and `y`. Arrows are routed again afterwards, and frames the CLI made are resized to fit. On a canvas with several CLI frames, `layout` lays all the frames out together, the same way `create` does with several frames. `--layout` takes `left-right` (the default), `top-down` or `grid`; `none` exits 9.
 
-## Reading a board
+## Reading a canvas
 
-`show` always prints JSON, with the board's `path` and `hash`:
+`show` always prints JSON, with the canvas's `path` and `hash`:
 
 ```json
 {
@@ -214,11 +214,11 @@ In a spec with several frames, pin every node of a frame or none of them. A fram
 }
 ```
 
-`kind` is `box`, `text`, `note`, `image`, `draw`, `line`, `arrow` or `frame`. `note` holds the `[[link]]` of a card, `image` the file of an image, and a frame's `text` is its name. `key` is left out for an element that has none, and so are `shape`, `text`, `note`, `image` and `frame` when they do not apply. Labels are folded into their box or arrow, so they are not separate nodes. An edge's `style` has the node fields minus `fill` and `fillStyle` (`font` and `fontSize` only when it has a label). An image's `style` leaves out the stroke fields. Colours, widths, roughness and font sizes come back as the names in the style table when one matches and as raw values otherwise. `from` and `to` use a key when the element has one and an element id otherwise. `by` is `agent` for what the CLI created and `user` for what a person drew. Run `show` before touching a board you did not just build, and again whenever the user may have changed it. The output is long because every node carries the full style block. Filter it:
+`kind` is `box`, `text`, `note`, `image`, `draw`, `line`, `arrow` or `frame`. `note` holds the `[[link]]` of a card, `image` the file of an image, and a frame's `text` is its name. `key` is left out for an element that has none, and so are `shape`, `text`, `note`, `image` and `frame` when they do not apply. Labels are folded into their box or arrow, so they are not separate nodes. An edge's `style` has the node fields minus `fill` and `fillStyle` (`font` and `fontSize` only when it has a label). An image's `style` leaves out the stroke fields. Colours, widths, roughness and font sizes come back as the names in the style table when one matches and as raw values otherwise. `from` and `to` use a key when the element has one and an element id otherwise. `by` is `agent` for what the CLI created and `user` for what a person drew. Run `show` before touching a canvas you did not just build, and again whenever the user may have changed it. The output is long because every node carries the full style block. Filter it:
 
 ```sh
-jotura canvas show "Whiteboard/Launch plan" | jq '.nodes[] | {id, key, text, by}'
-jotura canvas show "Whiteboard/Launch plan" | python -c "import json,sys; [print(n['id'], n.get('key'), n.get('text')) for n in json.load(sys.stdin)['nodes']]"
+jotura canvas show "Canvases/Launch plan" | jq '.nodes[] | {id, key, text, by}'
+jotura canvas show "Canvases/Launch plan" | python -c "import json,sys; [print(n['id'], n.get('key'), n.get('text')) for n in json.load(sys.stdin)['nodes']]"
 ```
 
 The second line is for a machine without `jq`.
@@ -268,13 +268,13 @@ jotura canvas create "Reading/Sync notes" --spec - <<'EOF'
 EOF
 ```
 
-**Adding to a board a person already drew.** Read it first. The user's elements have no key, so connect to them by element id.
+**Adding to a canvas a person already drew.** Read it first. The user's elements have no key, so connect to them by element id.
 
 ```sh
-jotura canvas show "Whiteboard/Launch plan" | jq '.nodes[] | {id, text, by}'
+jotura canvas show "Canvases/Launch plan" | jq '.nodes[] | {id, text, by}'
 # { "id": "Zk39sLq2", "text": "Launch", "by": "user" }
 
-jotura canvas add "Whiteboard/Launch plan" --spec - --dry-run --diff <<'EOF'
+jotura canvas add "Canvases/Launch plan" --spec - --dry-run --diff <<'EOF'
 {
   "nodes": [ { "id": "risk", "text": "Risk: store review", "fill": "yellow" } ],
   "edges": [ { "from": "risk", "to": "Zk39sLq2", "style": "dashed" } ]
@@ -282,34 +282,34 @@ jotura canvas add "Whiteboard/Launch plan" --spec - --dry-run --diff <<'EOF'
 EOF
 ```
 
-Read the diff, then run the same command without `--dry-run --diff` and add `--json`. Render the board to check it:
+Read the diff, then run the same command without `--dry-run --diff` and add `--json`. Render the canvas to check it:
 
 ```sh
-jotura canvas render "Whiteboard/Launch plan" --out /tmp/plan.png
+jotura canvas render "Canvases/Launch plan" --out /tmp/plan.png
 ```
 
-The new box lands to the right of "Launch" and the person's boxes stay put. To retitle your box later: `jotura canvas update "Whiteboard/Launch plan" --id risk --text "Risk: review delay"`.
+The new box lands to the right of "Launch" and the person's boxes stay put. To retitle your box later: `jotura canvas update "Canvases/Launch plan" --id risk --text "Risk: review delay"`.
 
 ## Images
 
 `image` takes the name of a file you pass with `--attach`, or a path or file name of an image already in the vault (resolved like a wikilink):
 
 ```sh
-jotura canvas add "Whiteboard/Launch plan" --attach ~/Downloads/dashboard.png --spec - <<'EOF'
+jotura canvas add "Canvases/Launch plan" --attach ~/Downloads/dashboard.png --spec - <<'EOF'
 { "nodes": [ { "id": "shot", "image": "dashboard.png", "width": 320 } ] }
 EOF
 ```
 
-On a `.excalidraw.md` board the attached file is copied to `assets/<name>` (with a suffix such as `-1` when the name is taken) and the board links it there. An image has no border, so put it in a frame or add a box node behind it. A plain `.excalidraw` board embeds the bytes. An image over 16 MiB exits 9, and on a plain `.excalidraw` board an image over 5 MiB exits 9 too; use a `.excalidraw.md` board for large images. A name that is neither attached nor in the vault exits 3. If an image is later missing, `render` draws a placeholder and lists it under `missingImages`.
+On a `.excalidraw.md` canvas the attached file is copied to `assets/<name>` (with a suffix such as `-1` when the name is taken) and the canvas links it there. An image has no border, so put it in a frame or add a box node behind it. A plain `.excalidraw` canvas embeds the bytes. An image over 16 MiB exits 9, and on a plain `.excalidraw` canvas an image over 5 MiB exits 9 too; use a `.excalidraw.md` canvas for large images. A name that is neither attached nor in the vault exits 3. If an image is later missing, `render` draws a placeholder and lists it under `missingImages`.
 
 ## Exit codes
 
 | Code | Meaning | What to do |
 |---|---|---|
-| 2 | `HashConflict`, the board changed since your `--if-hash`; the error carries a `currentVsIntended` diff | run `show` for the new hash and state, then re-apply your change |
-| 3 | `NotFound`: the board, a key, element id or frame name, the spec file, an `--attach` file, a vault image, or an edge endpoint does not exist | run `show` and use a key or id it lists; check the path; for an edge, add the node to the spec or use the key of an element already on the board |
-| 4 | `Ambiguous`, a bare board name matches several boards | pass the vault path from `candidates` |
+| 2 | `HashConflict`, the canvas changed since your `--if-hash`; the error carries a `currentVsIntended` diff | run `show` for the new hash and state, then re-apply your change |
+| 3 | `NotFound`: the canvas, a key, element id or frame name, the spec file, an `--attach` file, a vault image, or an edge endpoint does not exist | run `show` and use a key or id it lists; check the path; for an edge, add the node to the spec or use the key of an element already on the canvas |
+| 4 | `Ambiguous`, a bare canvas name matches several canvases | pass the vault path from `candidates` |
 | 8 | `PermissionDenied` | tell the user |
-| 9 | `InvalidArgs`: a bad spec or flag value, and the message names the field and lists the valid values. Also an edge whose ends overlap, a duplicate spec id, `add` with an id that is already a key, an empty `id`, `text` or `label`, `draw`, `line` or `arrow` points that all sit on one spot, `create` on an existing board, `--if-hash` on `create`, a file that is not a board, an `update` with nothing to change, an edge asked to move or take a fill, `--stroke`, `--stroke-style` or `--stroke-width` on an image, a `columns` value outside 1 to 20, a `canvas layout --layout` other than `left-right`, `top-down` or `grid` (including `none`), a frame that mixes pinned and laid-out nodes in a spec with several frames, an image over 16 MiB (or over 5 MiB on a plain `.excalidraw` board), and a `render --out` that would overwrite an image the board uses | fix the field the message names and retry, since nothing was written; for an overlap, move one of the two elements; for a mixed frame, pin all of its nodes or none; for an existing key, pick another id or use `update`; for an image, wrap it in a frame or add a box node behind it; for an existing board, use `add`; for `render`, choose another `--out`; for `--layout`, use `left-right`, `top-down` or `grid`; for a large image, shrink it or use a `.excalidraw.md` board |
-| 14 | `TargetMissing`, the board was deleted or moved before the write | check the board still exists, then recreate or retry |
-| 15 | `ReadOnlyShare`, the board, or a `render --out` inside the vault, is in a view-only share | stop and ask the owner for editor access, or render to a path outside the share |
+| 9 | `InvalidArgs`: a bad spec or flag value, and the message names the field and lists the valid values. Also an edge whose ends overlap, a duplicate spec id, `add` with an id that is already a key, an empty `id`, `text` or `label`, `draw`, `line` or `arrow` points that all sit on one spot, `create` on an existing canvas, `--if-hash` on `create`, a file that is not a canvas, an `update` with nothing to change, an edge asked to move or take a fill, `--stroke`, `--stroke-style` or `--stroke-width` on an image, a `columns` value outside 1 to 20, a `canvas layout --layout` other than `left-right`, `top-down` or `grid` (including `none`), a frame that mixes pinned and laid-out nodes in a spec with several frames, an image over 16 MiB (or over 5 MiB on a plain `.excalidraw` canvas), and a `render --out` that would overwrite an image the canvas uses | fix the field the message names and retry, since nothing was written; for an overlap, move one of the two elements; for a mixed frame, pin all of its nodes or none; for an existing key, pick another id or use `update`; for an image, wrap it in a frame or add a box node behind it; for an existing canvas, use `add`; for `render`, choose another `--out`; for `--layout`, use `left-right`, `top-down` or `grid`; for a large image, shrink it or use a `.excalidraw.md` canvas |
+| 14 | `TargetMissing`, the canvas was deleted or moved before the write | check the canvas still exists, then recreate or retry |
+| 15 | `ReadOnlyShare`, the canvas, or a `render --out` inside the vault, is in a view-only share | stop and ask the owner for editor access, or render to a path outside the share |

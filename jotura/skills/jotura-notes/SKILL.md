@@ -101,8 +101,11 @@ escaping is needed.
 | `---` YAML frontmatter | hidden in the editor, editable in source mode |
 
 **Do not write:** inline HTML. The Markdown layer has HTML disabled, so a
-snippet of markup is shown as ordinary text. An `.excalidraw.md` note opens in
-source mode and its drawing is not rendered.
+snippet of markup is shown as ordinary text. Never hand-edit an
+`.excalidraw.md` or `.excalidraw` canvas: build and change canvases with
+`jotura canvas` (see the jotura-vault skill's `references/canvas.md`). With the
+desktop setting Canvas (preview) on, a canvas opens as a drawing; with it off,
+it opens as Markdown source.
 
 You can look at the images a note embeds: `jotura links <note> --json` gives
 each embed's `absolutePath`, and your own image-capable file tool opens it.
